@@ -1,0 +1,113 @@
+services:
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/prowlarr:/config
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/sonarr:/config
+      - /media/jellyfin/webseries:/tv
+      - /media/jellyfin/anime:/anime
+      - /media/jellyfin/torrents:/downloads
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/radarr:/config
+      - /media/jellyfin/movies:/movies
+      - /media/jellyfin/torrents:/downloads
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/lidarr:/config
+      - /media/jellyfin/music:/music
+      - /media/jellyfin/torrents:/downloads
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/bazarr:/config
+      - /media/jellyfin/movies:/movies
+      - /media/jellyfin/webseries:/tv
+      - /media/jellyfin/anime:/anime
+    restart: unless-stopped
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    network_mode: host
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=Asia/Kolkata
+      - PORT=5055
+    volumes:
+      - ./config/jellyseerr:/app/config
+    restart: unless-stopped
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: recyclarr
+    network_mode: host
+    user: 1000:1000
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/recyclarr:/config
+    restart: unless-stopped
+
+  autobrr:
+    image: ghcr.io/autobrr/autobrr:latest
+    container_name: autobrr
+    network_mode: host
+    environment:
+      - TZ=Asia/Kolkata
+    user: 1000:1000
+    volumes:
+      - ./config/autobrr:/config
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    network_mode: host
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Asia/Kolkata
+    restart: unless-stopped
