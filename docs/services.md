@@ -17,7 +17,7 @@ The media streaming server. Scans configured library folders and streams content
 **Key settings:**
 - Real-time monitor enabled on all libraries
 - Metadata: TMDB (movies/TV), MusicBrainz + TheAudioDB (music)
-- Remote access via Tailscale at `http://100.82.94.50:8096`
+- Remote access via Tailscale at `http://<your-tailscale-ip>:8096`
 
 ---
 
@@ -75,10 +75,6 @@ Music automation — the music equivalent of Radarr. Monitors artists, searches 
 - Allowed formats: FLAC, ALAC, APE, WavPack, FLAC 24bit, ALAC 24bit
 - All lossy formats (MP3, AAC, OGG, WMA) blocked
 
-**Monitored Artists** (12 total):
-- Desi Hip Hop: DIVINE, Seedhe Maut, Raftaar, Badshah, Yo Yo Honey Singh, Emiway Bantai, MC STAN
-- Bollywood: Arijit Singh, A.R. Rahman, Pritam, Vishal-Shekhar, Shankar–Ehsaan–Loy
-
 **Volume mounts:**
 - `/music` → `/media/jellyfin/music`
 - `/downloads` → `/media/jellyfin/torrents`
@@ -88,11 +84,47 @@ Music automation — the music equivalent of Radarr. Monitors artists, searches 
 
 ---
 
+## Readarr
+
+**Port**: 8787 | **Container**: `linuxserver/readarr:0.4.19-nightly`
+
+Book automation — the book equivalent of Radarr. Monitors authors, searches for books across configured indexers, and downloads ebooks (EPUB, PDF, MOBI) to the books library.
+
+**Volume mounts:**
+- `/books` → `/media/jellyfin/books`
+- `/downloads` → `/media/jellyfin/torrents`
+
+**Remote path mapping:**
+- `localhost:/media/jellyfin/torrents/readarr/` → `/downloads/readarr/`
+
+**Indexers (synced from Prowlarr):** 1337x, Knaben, kickasstorrents.ws, Demonoid Clone, NorTorrent, NoNaMe Club
+
+**Note**: Readarr uses `api.bookinfo.club` as its metadata provider (a Goodreads proxy). If this service is unavailable, use Prowlarr's search to find books manually and add them directly to qBittorrent with save path `/media/jellyfin/books/`.
+
+---
+
+## Kavita
+
+**Port**: 5000 | **Container**: `jvmilazz0/kavita:latest`
+
+Self-hosted ebook reader with a clean, mobile-friendly web UI. Reads directly from the books library — no separate app needed on your phone, just a browser.
+
+**Supported formats:** EPUB, PDF, CBZ, CBR, and more.
+
+**Volume mounts:**
+- `/books` → `/media/jellyfin/books`
+
+**Access:** `http://localhost:5000` (or `http://<your-tailscale-ip>:5000` remotely)
+
+**Setup:** First launch prompts you to create an admin account. Then add a library pointing to `/books`.
+
+---
+
 ## Prowlarr
 
 **Port**: 9696 | **Container**: `lscr.io/linuxserver/prowlarr:latest`
 
-The indexer hub. Aggregates 80+ torrent indexers and exposes them to Radarr, Sonarr, and Lidarr via a unified Torznab API. When any *arr app searches, it queries Prowlarr which fans out to all relevant indexers.
+The indexer hub. Aggregates 80+ torrent indexers and exposes them to all *arr apps via a unified Torznab API. When any *arr app searches, it queries Prowlarr which fans out to all relevant indexers.
 
 **Connected applications:**
 | App | Sync Categories |
@@ -100,14 +132,7 @@ The indexer hub. Aggregates 80+ torrent indexers and exposes them to Radarr, Son
 | Radarr | Movies (2000-series) |
 | Sonarr | TV (5000-series), Anime (5070) |
 | Lidarr | Audio/Music (3000-series) |
-
-**Key indexers for music:**
-- **RuTracker** — semi-private Russian tracker, excellent FLAC catalog including Indian music
-- **1337x** — general public tracker
-- **Knaben** — meta-search aggregator
-- **MixtapeTorrent** — music-focused
-- **Nipponsei** — anime music / Japanese releases
-- **BT.etree** — lossless live recordings
+| Readarr | Books (7000-series) |
 
 **FlareSolverr** is configured as a proxy for indexers behind Cloudflare protection.
 
@@ -115,7 +140,7 @@ The indexer hub. Aggregates 80+ torrent indexers and exposes them to Radarr, Son
 
 ## qBittorrent
 
-**Port**: 8080 | **Type**: Native (not in Docker) | **Username**: sai
+**Port**: 8080 | **Type**: Native (not in Docker)
 
 The actual download client. Receives torrent/magnet links from the *arr apps, downloads to category-specific folders, and seeds after completion.
 
@@ -125,6 +150,7 @@ The actual download client. Receives torrent/magnet links from the *arr apps, do
 | `radarr` | `/media/jellyfin/torrents/radarr/` |
 | `sonarr` | `/media/jellyfin/torrents/sonarr/` |
 | `lidarr` | `/media/jellyfin/torrents/lidarr/` |
+| `readarr` | `/media/jellyfin/torrents/readarr/` |
 
 Default save path: `/media/jellyfin/torrents/`
 
@@ -166,5 +192,3 @@ Headless browser proxy that solves Cloudflare CAPTCHA challenges for indexers th
 **Container**: `ghcr.io/recyclarr/recyclarr:latest`
 
 Syncs quality profiles and custom formats from the TRaSH Guides (community-maintained best-practice configs) into Radarr and Sonarr automatically. Ensures naming conventions, quality cutoffs, and preferred release groups stay up to date without manual configuration.
-
-Config: `/home/sai/docker/arr-stack/config/recyclarr/`
