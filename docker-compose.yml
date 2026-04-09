@@ -111,3 +111,28 @@ services:
       - LOG_LEVEL=info
       - TZ=Asia/Kolkata
     restart: unless-stopped
+
+  readarr:
+    image: linuxserver/readarr:0.4.19-nightly
+    container_name: readarr
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/readarr:/config
+      - /media/jellyfin/books:/books
+      - /media/jellyfin/torrents:/downloads
+    restart: unless-stopped
+
+  kavita:
+    image: jvmilazz0/kavita:latest
+    container_name: kavita
+    network_mode: host
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/kavita:/kavita/config
+      - /media/jellyfin/books:/books
+    restart: unless-stopped
