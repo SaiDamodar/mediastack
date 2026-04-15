@@ -21,9 +21,7 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./config/sonarr:/config
-      - /media/jellyfin/webseries:/tv
-      - /media/jellyfin/anime:/anime
-      - /media/jellyfin/torrents:/downloads
+      - /media/jellyfin:/data
     restart: unless-stopped
 
   radarr:
@@ -36,8 +34,7 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./config/radarr:/config
-      - /media/jellyfin/movies:/movies
-      - /media/jellyfin/torrents:/downloads
+      - /media/jellyfin:/data
     restart: unless-stopped
 
   lidarr:
@@ -50,8 +47,7 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./config/lidarr:/config
-      - /media/jellyfin/music:/music
-      - /media/jellyfin/torrents:/downloads
+      - /media/jellyfin:/data
     restart: unless-stopped
 
   bazarr:
@@ -64,9 +60,7 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./config/bazarr:/config
-      - /media/jellyfin/movies:/movies
-      - /media/jellyfin/webseries:/tv
-      - /media/jellyfin/anime:/anime
+      - /media/jellyfin:/data
     restart: unless-stopped
 
   jellyseerr:
@@ -122,8 +116,7 @@ services:
       - TZ=Asia/Kolkata
     volumes:
       - ./config/readarr:/config
-      - /media/jellyfin/books:/books
-      - /media/jellyfin/torrents:/downloads
+      - /media/jellyfin:/data
     restart: unless-stopped
 
   kavita:
@@ -135,4 +128,65 @@ services:
     volumes:
       - ./config/kavita:/kavita/config
       - /media/jellyfin/books:/books
+    restart: unless-stopped
+
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: unpackerr
+    network_mode: host
+    user: 1000:1000
+    environment:
+      - TZ=Asia/Kolkata
+      - UN_RADARR_0_URL=http://localhost:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - UN_SONARR_0_URL=http://localhost:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_LIDARR_0_URL=http://localhost:8686
+      - UN_LIDARR_0_API_KEY=${LIDARR_API_KEY}
+      - UN_READARR_0_URL=http://localhost:8787
+      - UN_READARR_0_API_KEY=${READARR_API_KEY}
+    volumes:
+      - /media/jellyfin:/data
+    restart: unless-stopped
+
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    ports:
+      - "3001:3000"
+    environment:
+      - TZ=Asia/Kolkata
+      - POSTGRES_USER=jellystat
+      - POSTGRES_PASSWORD=jellystat_pass
+      - POSTGRES_IP=jellystat-db
+      - POSTGRES_PORT=5432
+      - JWT_SECRET=jellystat_jwt_secret_change_me
+    volumes:
+      - ./config/jellystat:/app/backend/backup-data
+    depends_on:
+      - jellystat-db
+    restart: unless-stopped
+
+  jellystat-db:
+    image: postgres:15
+    container_name: jellystat-db
+    environment:
+      - POSTGRES_DB=jfstat
+      - POSTGRES_USER=jellystat
+      - POSTGRES_PASSWORD=jellystat_pass
+    volumes:
+      - ./config/jellystat-db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  cross-seed:
+    image: ghcr.io/cross-seed/cross-seed:latest
+    container_name: cross-seed
+    network_mode: host
+    user: 1000:1000
+    environment:
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./config/cross-seed:/config
+      - /media/jellyfin:/data:ro
+    command: daemon
     restart: unless-stopped
